@@ -3,18 +3,19 @@
 #include <unistd.h>
 #include <termios.h>
 
-#define Max_Width 256
-#define Max_Height 256
+#define Max_Width 512
+#define Max_Height 512
 
 namespace graphics{
     enum Direction{UP, DOWN, LEFT, RIGHT};
 
-    char PixelTable[10] = {
+    char PixelTable[11] = {
             ' ',
             '.',
-            '-',
             ':',
-            '=',
+            '|', 
+            '-', // is equivilant to 3
+            '=', // is equivilante to 4
             '+',
             '*',
             '#',
@@ -166,6 +167,14 @@ namespace graphics{
             this->Buffer[X][Y] = C;
         }
 
+        inline void ClearPixels(int x1 =0, int y1=0, int x2=Max_Width, int y2=Max_Height){
+            for(int i = y1; i <=y2; i++){
+                for(int j = x1; j <= x2; j++){
+                    this->Buffer[j][i] = ' ';
+                }
+            }
+        }
+
         inline void Line(int x1,int y1, int x2, int y2, char C){
             int dx = abs(x2 - x1);
             int dy = abs(y2 - y1);
@@ -248,9 +257,37 @@ namespace graphics{
                 }
         }
 
-        inline void PutText(int X, int Y, char const *Text, Direction dir = LEFT){
+        inline void PutText(int X, int Y, char const *Text, Direction dir = LEFT, Direction wdir = DOWN, int WrapLength = 80){
             const char  * temp = Text; // first copy the pointer to not change the original
+            int i = 0;
+            int tX = X;
+            int tY = Y;
             while(*temp != '\0'){
+                i += 1;
+                if(i == WrapLength){
+                  i = 0;
+                  tX = X - tX;
+                  tY = Y - tY;
+
+                  X = X - tX;
+                  Y = Y - tY;
+                  switch(wdir){
+                    case UP:
+                        Y++;
+                        break;
+                    case DOWN:
+                        Y--;
+                        break;
+                    case LEFT:
+                        X++;
+                        break;
+                    case RIGHT:
+                        X--; 
+                        break;
+
+                  };
+                }
+
                 this->Buffer[X][Y] = *temp;
 
                 switch(dir){
@@ -275,9 +312,9 @@ namespace graphics{
         }
         
         inline void AltShow(Display &screen){
-            for(int i = screen->Height; i >= 0; i--){
-                for(int j = 0; j <= screen->Width; j++){
-                    printf("%c",screen->Buffer[j][i]);
+            for(int i = screen.Height; i >= 0; i--){
+                for(int j = 0; j <= screen.Width; j++){
+                    printf("%c",screen.Buffer[j][i]);
                     }
                 printf("\n\r");
             }
